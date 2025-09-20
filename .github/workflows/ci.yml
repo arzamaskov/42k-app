@@ -7,48 +7,18 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8
-        env:
-          MYSQL_DATABASE: testing
-          MYSQL_ROOT_PASSWORD: root
-        ports: ["3306:3306"]
-        options: >-
-          --health-cmd "mysqladmin ping -proot"
-          --health-interval 10s --health-timeout 5s --health-retries 3
-      redis:
-        image: redis:7-alpine
-        ports: ["6379:6379"]
     steps:
       - uses: actions/checkout@v4
+
       - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.3"
-          extensions: pdo_mysql, intl, zip
+          extensions: pdo_sqlite, sqlite3, intl, zip
+
       - name: Install composer deps
         run: composer install --no-progress --prefer-dist
         working-directory: app
-      - name: Env
-        run: cp .env.example .env && php artisan key:generate
-        working-directory: app
-        env:
-          APP_KEY: base64:dummy
-      - name: Migrate
-        run: php artisan migrate --force
-        working-directory: app
-        env:
-          DB_CONNECTION: mysql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_DATABASE: testing
-          DB_USERNAME: root
-          DB_PASSWORD: root
-      - name: Pint (lint)
-        run: |
-          composer require laravel/pint --dev --no-progress
-          ./vendor/bin/pint --test
-        working-directory: app
-      - name: PHPUnit
+
+      - name: Run tests (uses app/.env.testing)
         run: php artisan test --no-coverage
         working-directory: app
