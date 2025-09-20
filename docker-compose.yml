@@ -15,7 +15,6 @@ services:
       - ./app:/var/www/html
       - ./app/.composer:/var/www/.composer
       - ./app/.npm:/var/www/.npm
-    env_file: .env
     depends_on:
       - db
       - redis
