@@ -1,0 +1,14 @@
+# repo root
+.env
+/app/.env
+/app/.composer/
+/app/.npm/
+
+# Laravel app (дополняет .gitignore внутри app/, если он есть)
+app/vendor/
+app/node_modules/
+app/public/storage
+app/storage/*.key
+app/storage/logs/*
+app/bootstrap/cache/*.php
+

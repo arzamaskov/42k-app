@@ -1,0 +1,40 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [ main, feature/** ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo_sqlite, sqlite3, intl, zip
+
+      # Install PHP deps
+      - name: Install composer deps
+        run: composer install --no-progress --prefer-dist
+        working-directory: app
+
+      # Build Vite assets (fix for @vite manifest in tests)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Build assets
+        run: |
+          npm ci
+          npm run build
+        working-directory: app
+
+      # Run tests (uses app/.env.testing with sqlite :memory:)
+      - name: Run tests
+        run: php artisan test --no-coverage
+        working-directory: app
