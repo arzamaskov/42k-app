@@ -1,6 +1,6 @@
-# 42k — трекер пробежек
+# 42k — трекер пробежек  · ![Live](https://img.shields.io/badge/42к.рф-live-brightgreen)
 
-[**42к.рф**](https://xn--42-3lc.xn--p1ai) · ![Live](https://img.shields.io/badge/42к.рф-live-brightgreen)
+[**42к.рф**](https://xn--42-3lc.xn--p1ai)
 
 Мини-MVP на Laravel (Blade/Livewire): регистрация/логин, страница пробежек `/runs`, базовая инфраструктура (Docker, CI/CD).
 
