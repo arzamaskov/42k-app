@@ -50,3 +50,14 @@ RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoload
  && chmod -R ug+rw storage bootstrap/cache
 
 CMD ["php-fpm"]
+
+# ========================
+# Web (nginx with baked public/)
+# ========================
+FROM nginx:1.27-alpine AS web
+# Каталог под Laravel public
+WORKDIR /var/www/html
+RUN mkdir -p /var/www/html/public
+# Кладём собранные ассеты и public/ целиком из assets-стейджа
+COPY --from=assets /app/public /var/www/html/public
+# Конфиг nginx монтируем с хоста (как и раньше), поэтому тут ничего не настраиваем

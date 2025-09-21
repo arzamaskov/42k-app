@@ -15,17 +15,23 @@ jobs:
       - name: Login GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build prod image
+      - name: Build prod images (app + web)
         run: |
           docker build -f .docker/Dockerfile --target prod \
-            -t ghcr.io/${{ github.repository }}:${{ github.sha }} \
-            -t ghcr.io/${{ github.repository }}:latest \
+            -t ghcr.io/${{ github.repository }}:app-${{ github.sha }} \
+            -t ghcr.io/${{ github.repository }}:app-latest \
+            .
+          docker build -f .docker/Dockerfile --target web \
+            -t ghcr.io/${{ github.repository }}:web-${{ github.sha }} \
+            -t ghcr.io/${{ github.repository }}:web-latest \
             .
 
-      - name: Push image
+      - name: Push images
         run: |
-          docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
-          docker push ghcr.io/${{ github.repository }}:latest
+          docker push ghcr.io/${{ github.repository }}:app-${{ github.sha }}
+          docker push ghcr.io/${{ github.repository }}:app-latest
+          docker push ghcr.io/${{ github.repository }}:web-${{ github.sha }}
+          docker push ghcr.io/${{ github.repository }}:web-latest
 
       # (опц.) выложим текущий код в /var/lib/42k/code, чтобы nginx видел public/ и статику из образа:
       - name: Pack built code for nginx (public)
