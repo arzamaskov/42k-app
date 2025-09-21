@@ -1,4 +1,9 @@
-# 42k-app
+# 42k — трекер пробежек
+
+[**42к.рф**](https://xn--42-3lc.xn--p1ai) · ![Live](https://img.shields.io/badge/42к.рф-live-brightgreen)
+
+Мини-MVP на Laravel (Blade/Livewire): регистрация/логин, страница пробежек `/runs`, базовая инфраструктура (Docker, CI/CD).
+
 Minimalist Laravel + Livewire app for tracking runs, shoe mileage, and simple planning — built for 42k.
 
 ## Tech
