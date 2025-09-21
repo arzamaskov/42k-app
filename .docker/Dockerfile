@@ -34,9 +34,9 @@ RUN npm run build
 FROM base AS prod
 WORKDIR /var/www/html
 
-# 1) Composer deps (кеш слоёв)
+# 1) Composer deps (кеш слоёв), без скриптов
 COPY app/composer.json app/composer.lock ./
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+RUN composer install --no-dev --no-interaction --prefer-dist --no-scripts
 
 # 2) Код приложения
 COPY app ./
@@ -44,10 +44,8 @@ COPY app ./
 # 3) Готовые фронт-ассеты из assets-стейджа
 COPY --from=assets /app/public/build ./public/build
 
-# 4) Оптимизации Laravel
-RUN php artisan config:cache \
- && php artisan route:cache \
- && php artisan view:cache \
+# 4) Допрогон composer (включит скрипты) + права
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader \
  && chown -R www-data:www-data storage bootstrap/cache \
  && chmod -R ug+rw storage bootstrap/cache
 
