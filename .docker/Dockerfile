@@ -41,6 +41,9 @@ RUN composer install --no-dev --no-interaction --prefer-dist --no-scripts
 # 2) Код приложения
 COPY app ./
 
+# 2.1) На всякий случай — не держим локальный .env в образе
+RUN rm -f .env
+
 # 3) Готовые фронт-ассеты из assets-стейджа
 COPY --from=assets /app/public/build ./public/build
 
