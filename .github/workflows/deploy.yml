@@ -63,3 +63,30 @@ jobs:
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
+      - name: Run migrations on server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/42k
+
+            # (опц.) техобслуживание на время миграций
+            docker compose -f docker-compose.prod.yml exec -T app php artisan down --render="errors::503" || true
+
+            # ждём готовности БД (если только что перезапустилась)
+            until docker compose -f docker-compose.prod.yml exec -T db \
+              sh -lc 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SELECT 1"' >/dev/null 2>&1; do
+              echo "waiting for db..."; sleep 2
+            done
+
+            # применяем миграции (идемпотентно)
+            docker compose -f docker-compose.prod.yml exec -T app php artisan migrate --force
+
+            # (опц.) прогреть кеши
+            docker compose -f docker-compose.prod.yml exec -T app sh -lc 'php artisan optimize' || true
+
+            # выходим из техобслуживания
+            docker compose -f docker-compose.prod.yml exec -T app php artisan up || true
