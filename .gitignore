@@ -12,3 +12,4 @@ app/storage/*.key
 app/storage/logs/*
 app/bootstrap/cache/*.php
 
+.idea/
