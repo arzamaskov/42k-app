@@ -3,6 +3,8 @@
 /app/.env
 /app/.composer/
 /app/.npm/
+/app/.config/
+/app/.cache/
 
 # Laravel app (дополняет .gitignore внутри app/, если он есть)
 app/vendor/

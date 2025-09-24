@@ -11,10 +11,14 @@ services:
       HOME: /var/www
       COMPOSER_HOME: /var/www/.composer
       NPM_CONFIG_CACHE: /var/www/.npm
+      XDG_CONFIG_HOME: /var/www/.config
+      XDG_CONFIG_CACHE: /var/www/.cache
     volumes:
       - ./app:/var/www/html
       - ./app/.composer:/var/www/.composer
       - ./app/.npm:/var/www/.npm
+      - ./app/.config:/var/www/.config
+      - ./app/.cache:/var/www/.cache
     depends_on:
       - db
       - redis
