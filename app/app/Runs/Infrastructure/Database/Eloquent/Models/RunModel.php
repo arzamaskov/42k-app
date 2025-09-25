@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace App\Runs\Infrastructure\Database\Eloquent\Models;
 
+use Carbon\CarbonInterface;
+use Database\Factories\RunFactory;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 final class RunModel extends Model
 {
+    use HasFactory;
+
     protected $table = 'runs';
 
     protected $fillable = [
@@ -31,4 +37,27 @@ final class RunModel extends Model
         'rpe' => 'integer',
         'shoe_id' => 'integer',
     ];
+
+    protected static function newFactory(): RunFactory
+    {
+        return RunFactory::new();
+    }
+
+    /** Показывать пробежки конкретного пользователя */
+    public function scopeForUser(Builder $q, int $userId): Builder
+    {
+        return $q->where('user_id', $userId);
+    }
+
+    /** Ограничить по диапазону времени (включительно) */
+    public function scopeBetween(Builder $q, CarbonInterface $from, CarbonInterface $to): Builder
+    {
+        return $q->whereBetween('run_at', [$from, $to]);
+    }
+
+    /** Сортировка по дате забега — новые сначала */
+    public function scopeRecent(Builder $q): Builder
+    {
+        return $q->orderByDesc('run_at');
+    }
 }
