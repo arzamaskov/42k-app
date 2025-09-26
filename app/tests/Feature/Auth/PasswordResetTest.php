@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Models\User;
+use App\Users\Infrastructure\Database\Eloquent\Models\UserModel;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -19,22 +19,28 @@ class PasswordResetTest extends TestCase
         $response->assertStatus(200);
     }
 
+    /**
+     * @throws \Exception
+     */
     public function test_reset_password_link_can_be_requested(): void
     {
         Notification::fake();
 
-        $user = User::factory()->create();
+        $user = UserModel::factory()->create();
 
         $this->post('/forgot-password', ['email' => $user->email]);
 
         Notification::assertSentTo($user, ResetPassword::class);
     }
 
+    /**
+     * @throws \Exception
+     */
     public function test_reset_password_screen_can_be_rendered(): void
     {
         Notification::fake();
 
-        $user = User::factory()->create();
+        $user = UserModel::factory()->create();
 
         $this->post('/forgot-password', ['email' => $user->email]);
 
@@ -47,11 +53,14 @@ class PasswordResetTest extends TestCase
         });
     }
 
+    /**
+     * @throws \Exception
+     */
     public function test_password_can_be_reset_with_valid_token(): void
     {
         Notification::fake();
 
-        $user = User::factory()->create();
+        $user = UserModel::factory()->create();
 
         $this->post('/forgot-password', ['email' => $user->email]);
 
