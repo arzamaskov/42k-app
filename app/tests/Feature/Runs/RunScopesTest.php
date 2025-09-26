@@ -7,7 +7,7 @@ namespace Feature\Runs;
 use App\Runs\Infrastructure\Database\Eloquent\Models\RunModel;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\TestCase;
+use Tests\TestCase;
 
 class RunScopesTest extends TestCase
 {
