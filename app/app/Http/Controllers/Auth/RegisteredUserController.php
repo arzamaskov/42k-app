@@ -3,17 +3,24 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Users\Domain\Contracts\UserRepository;
+use App\Users\Domain\Entity\User;
+use App\Users\Infrastructure\Database\Eloquent\Models\UserModel;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
+    public function __construct(private readonly UserRepository $userRepository)
+    {
+    }
+
     /**
      * Display the registration view.
      */
@@ -25,25 +32,28 @@ class RegisteredUserController extends Controller
     /**
      * Handle an incoming registration request.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
      */
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        $userEntity = new User(
+            $request->name,
+            $request->email,
+            Hash::make($request->password),
+        );
 
-        event(new Registered($user));
+        $user = $this->userRepository->store($userEntity);
+        $userModel = UserModel::query()->find($user->ulid);
 
-        Auth::login($user);
+        event(new Registered($userModel));
+
+        Auth::login($userModel);
 
         return redirect(route('dashboard', absolute: false));
     }
