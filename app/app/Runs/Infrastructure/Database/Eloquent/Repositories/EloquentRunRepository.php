@@ -13,6 +13,9 @@ use http\Exception\RuntimeException;
 
 class EloquentRunRepository implements RunRepository
 {
+    /**
+     * @throws \Exception
+     */
     public function find(string $runId): ?Run
     {
         $model = RunModel::query()->find($runId);
@@ -23,13 +26,13 @@ class EloquentRunRepository implements RunRepository
             throw new RuntimeException('Unexpected model type in EloquentRunRepository::find');
         }
 
-        return $this->toEntity($model);
+        return $this->mapToEntity($model);
     }
 
     /**
      * @inheritDoc
      */
-    public function listByUser(int $userId, int $limit = 50, int $page = 1): array
+    public function listByUser(string $userId, int $limit = 50, int $page = 1): array
     {
         $items = RunModel::query()
             ->where('user_id', $userId)
@@ -71,9 +74,9 @@ class EloquentRunRepository implements RunRepository
         return $this->mapToEntity($model);
     }
 
-    public function delete(int $id): void
+    public function delete(string $runId): void
     {
-        RunModel::query()->whereKey($id)->delete();
+        RunModel::query()->whereKey($runId)->delete();
     }
 
     /**
@@ -87,7 +90,7 @@ class EloquentRunRepository implements RunRepository
         }
 
         return new Run(
-            userId:    (int) $model->getAttribute('user_id'),
+            userId:    (string) $model->getAttribute('user_id'),
             runAt:     $runAt,
             distance:  (int) $model->getAttribute('distance'),
             duration:  (int) $model->getAttribute('duration'),
@@ -96,7 +99,7 @@ class EloquentRunRepository implements RunRepository
             rpe:       Caster::cast($model->getAttribute('rpe'), CastType::IntNullable),
             shoeId:    Caster::cast($model->getAttribute('shoe_id'), CastType::IntNullable),
             notes:     $model->getAttribute('notes'),
-            id:        (int) $model->getKey(),
+            id:        (string) $model->getKey(),
             createdAt: Caster::cast($model->getAttribute('created_at'), CastType::DateTimeImmutableNullable),
             updatedAt: Caster::cast($model->getAttribute('updated_at'), CastType::DateTimeImmutableNullable),
         );
