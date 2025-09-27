@@ -11,9 +11,9 @@ interface RunRepository
     public function find(string $runId): ?Run;
 
     /** return Run[] */
-    public function listByUser(int $userId, int $limit = 50, int $page = 1): array;
+    public function listByUser(string $userId, int $limit = 50, int $page = 1): array;
 
     public function store(Run $run): Run;
 
-    public function delete(int $id): void;
+    public function delete(string $runId): void;
 }

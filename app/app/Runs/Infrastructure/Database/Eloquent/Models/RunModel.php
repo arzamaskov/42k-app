@@ -7,12 +7,14 @@ namespace App\Runs\Infrastructure\Database\Eloquent\Models;
 use Carbon\CarbonInterface;
 use Database\Factories\RunFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 final class RunModel extends Model
 {
     use HasFactory;
+    use HasUlids;
 
     protected $table = 'runs';
 
@@ -26,6 +28,7 @@ final class RunModel extends Model
         'rpe',
         'shoe_id',
         'notes',
+        'id'
     ];
 
     protected $casts = [
@@ -44,7 +47,7 @@ final class RunModel extends Model
     }
 
     /** Показывать пробежки конкретного пользователя */
-    public function scopeForUser(Builder $q, int $userId): Builder
+    public function scopeForUser(Builder $q, string $userId): Builder
     {
         return $q->where('user_id', $userId);
     }

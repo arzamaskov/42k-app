@@ -7,7 +7,7 @@ namespace App\Runs\Domain\Entity;
 final class Run
 {
     public function __construct(
-        public readonly int $userId,
+        public readonly string $userId,
         public readonly \DateTimeImmutable $runAt,
         public readonly int $distance,
         public readonly int $duration,
@@ -16,7 +16,7 @@ final class Run
         public readonly ?int $rpe = null,
         public readonly ?int $shoeId = null,
         public readonly ?string $notes = null,
-        public readonly ?int $id = null,
+        public readonly ?string $id = null,
         public readonly ?\DateTimeImmutable $createdAt = null,
         public readonly ?\DateTimeImmutable $updatedAt = null
     ) {
