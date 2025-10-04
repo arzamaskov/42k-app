@@ -1,0 +1,21 @@
+includes:
+  - vendor/nunomaduro/larastan/extension.neon
+
+parameters:
+  level: 5
+  paths:
+    - app
+    - database
+    - routes
+  tmpDir: .phpstan/cache
+
+  # Рекомендуемые исключения из анализа
+  excludePaths:
+    - bootstrap/cache/*
+    - storage/*
+  checkGenericClassInNonGenericObjectType: false
+
+  # Для удобства в Laravel
+  scanFiles:
+    - vendor/nunomaduro/larastan/larastan-bootstrap.php
+
