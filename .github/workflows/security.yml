@@ -1,0 +1,24 @@
+name: security-audit
+on:
+  schedule:
+    - cron: "0 6 * * 1" # по понедельникам 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+      - run: composer install --no-interaction --no-progress --prefer-dist
+      - name: Composer audit
+        run: composer audit || true
+      - name: NPM audit (optional)
+        run: |
+          if [ -f package.json ]; then
+            npm ci --no-audit --no-fund
+            npm audit || true
+          fi
+
