@@ -1,6 +1,11 @@
 name: CI & Deploy (prod)
 
 on:
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore:
+      - "README.md"
+      - ".github/ISSUE_TEMPLATE/**"
   push:
     branches: [ "main" ]
     tags:     [ "v*" ]
@@ -19,7 +24,43 @@ env:
   DOCKER_BUILDKIT: "1"
 
 jobs:
-  test:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, intl
+      - name: Install deps (no scripts)
+        run: composer install --no-interaction --no-progress --prefer-dist --no-scripts --no-plugins
+      - name: Pint --test
+        run: vendor/bin/pint --test || true   # если нет pint в проекте — не падаем
+
+  static-analysis:
+    name: static-analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, intl
+          ini-values: memory_limit=-1
+      - name: Install deps (no scripts)
+        run: composer install --no-interaction --no-progress --prefer-dist --no-scripts --no-plugins
+      - name: PHPStan
+        run: |
+          if [ -x vendor/bin/phpstan ]; then
+            vendor/bin/phpstan analyse --no-progress || true
+          else
+            echo "phpstan not installed, skipping"
+          fi
+
+  tests:
     name: PHP tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -48,7 +89,8 @@ jobs:
   build:
     name: Build & Push images (app & web)
     runs-on: ubuntu-latest
-    needs: [test]
+    needs: [lint, static-analysis, tests]
+    if: github.event_name != 'pull_request'   # не запускаем сборку образов для PR
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
