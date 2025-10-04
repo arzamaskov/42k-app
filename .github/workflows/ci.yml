@@ -1,106 +1,160 @@
-name: CI
+name: CI & Deploy (prod)
 
 on:
-  pull_request:
-    branches: [ main ]
-    paths-ignore:
-      - "README.md"
-      - ".github/ISSUE_TEMPLATE/**"
   push:
-    branches: [ main ]
+    branches: [ "main" ]
+    tags:     [ "v*" ]
+
+concurrency:
+  group: deploy-prod-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
+  packages: write
 
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/arzamaskov/42k-app
+  DOCKER_BUILDKIT: "1"
 
 jobs:
-  lint:
-    name: lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: 8.3
-          extensions: mbstring, intl, pcntl, pdo, pdo_sqlite, sqlite3
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.composer/cache/files
-            vendor
-          key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
-          restore-keys: composer-${{ runner.os }}-
-      - run: composer validate --no-check-lock --no-check-publish --strict
-      - run: composer install --no-interaction --no-progress --prefer-dist --no-scripts --no-plugins
-      - run: vendor/bin/pint --test
-
-  static-analysis:
-    name: static-analysis
+  test:
+    name: PHP tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.3
-          extensions: mbstring, intl, pcntl, pdo, pdo_sqlite, sqlite3
-          ini-values: memory_limit=-1
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.composer/cache/files
-            vendor
-          key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
-          restore-keys: composer-${{ runner.os }}-
-      - run: composer validate --no-check-lock --no-check-publish --strict
-      - run: composer install --no-interaction --no-progress --prefer-dist --no-scripts --no-plugins
-      - name: Cache PHPStan
+          php-version: "8.3"
+          extensions: mbstring, intl, redis, pdo_pgsql
+      - name: Cache Composer
         uses: actions/cache@v4
         with:
-          path: .phpstan/cache
-          key: phpstan-${{ runner.os }}-${{ hashFiles('phpstan.neon', 'phpstan.neon.dist') }}
-          restore-keys: phpstan-${{ runner.os }}-
-      - name: PHPStan (level 5 по-умолчанию)
+          path: ~/.composer/cache/files
+          key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-
+      - name: Composer install
+        run: composer install --no-interaction --no-progress --prefer-dist
+      - name: App key for tests
         run: |
-          if [ ! -f phpstan.neon ]; then
-            echo "parameters:\n  level: 5\n  paths:\n    - app\n" > phpstan.neon
-          fi
-          vendor/bin/phpstan analyse --no-progress
+          [ -f .env ] || cp .env.example .env
+          php artisan key:generate
+      - name: PHPUnit
+        run: vendor/bin/phpunit --colors=always
 
-  tests:
-    name: tests
+  build:
+    name: Build & Push images (app & web)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    env:
-      APP_ENV: testing
-      DB_CONNECTION: sqlite
-      DB_DATABASE: ":memory:"
+    needs: [test]
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        uses: docker/login-action@v3
         with:
-          php-version: 8.3
-          extensions: mbstring, intl, pcntl, pdo, pdo_sqlite, sqlite3
-      - uses: actions/cache@v4
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      # APP: всегда пушим :sha
+      - name: Build & push APP (:sha)
+        uses: docker/build-push-action@v6
         with:
-          path: |
-            ~/.composer/cache/files
-            vendor
-          key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
-          restore-keys: composer-${{ runner.os }}-
-      - run: composer install --no-interaction --no-progress --prefer-dist
-      - name: Prepare .env
-        run: |
-          [ -f .env ] || cp .env.example .env || touch .env
-      - run: php artisan key:generate --no-interaction
-      - run: php artisan migrate --no-interaction --force || echo "skip migrations (none yet)"
-      - run: vendor/bin/phpunit --colors=always --log-junit junit.xml
-      - uses: actions/upload-artifact@v4
-        if: always()
+          context: .
+          file: ops/php/Dockerfile
+          target: prod
+          push: true
+          cache-from: type=gha,scope=app
+          cache-to: type=gha,mode=max,scope=app
+          tags: ${{ env.IMAGE_NAME }}:app-${{ github.sha }}
+
+      # APP: на тегах пушим :version и :latest
+      - name: Build & push APP (:version, :latest)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: docker/build-push-action@v6
         with:
-          name: junit
-          path: junit.xml
+          context: .
+          file: ops/php/Dockerfile
+          target: prod
+          push: true
+          cache-from: type=gha,scope=app
+          cache-to: type=gha,mode=max,scope=app
+          tags: |
+            ${{ env.IMAGE_NAME }}:app-${{ github.ref_name }}
+            ${{ env.IMAGE_NAME }}:app-latest
+
+      # WEB: всегда пушим :sha
+      - name: Build & push WEB (:sha)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ops/php/Dockerfile
+          target: web
+          push: true
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+          tags: ${{ env.IMAGE_NAME }}:web-${{ github.sha }}
+
+      # WEB: на тегах пушим :version и :latest
+      - name: Build & push WEB (:version, :latest)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ops/php/Dockerfile
+          target: web
+          push: true
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+          tags: |
+            ${{ env.IMAGE_NAME }}:web-${{ github.ref_name }}
+            ${{ env.IMAGE_NAME }}:web-latest
+
+  deploy:
+    name: Deploy to PROD (only on v* tags)
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: startsWith(github.ref, 'refs/tags/v')
+    timeout-minutes: 20
+    steps:
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host:     ${{ secrets.PROD_SSH_HOST }}
+          port:     ${{ secrets.PROD_SSH_PORT }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key:      ${{ secrets.PROD_SSH_KEY }}
+          command_timeout: 20m
+          envs: GITHUB_REF_NAME
+          script: |
+            set -euo pipefail
+            cd /opt/42k
+
+            # GHCR login (PAT, не GITHUB_TOKEN)
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+
+            # Проверка синтаксиса compose (упадёт, если есть ошибки)
+            docker compose -f docker-compose.prod.yml config -q
+
+            # Используем версию из тега (например, v1.2.3)
+            export APP_TAG="${GITHUB_REF_NAME}"
+            export WEB_TAG="${GITHUB_REF_NAME}"
+
+            APP_TAG="$APP_TAG" WEB_TAG="$WEB_TAG" docker compose -f docker-compose.prod.yml pull
+            APP_TAG="$APP_TAG" WEB_TAG="$WEB_TAG" docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker compose -f docker-compose.prod.yml ps
+
+            docker compose -f docker-compose.prod.yml exec -T app php artisan down || true
+            docker compose -f docker-compose.prod.yml exec -T app php artisan migrate --force
+            docker compose -f docker-compose.prod.yml exec -T app php artisan config:cache
+            docker compose -f docker-compose.prod.yml exec -T app php artisan route:cache
+            docker compose -f docker-compose.prod.yml exec -T app php artisan event:cache
+            docker compose -f docker-compose.prod.yml exec -T app php artisan storage:link || true
+            docker compose -f docker-compose.prod.yml exec -T app php artisan up
+
+            docker image prune -f
