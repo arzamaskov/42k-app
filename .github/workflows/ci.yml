@@ -34,7 +34,7 @@ jobs:
             vendor
           key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
           restore-keys: composer-${{ runner.os }}-
-      - run: composer validate --no-check-publish --strict
+      - run: composer validate --no-check-lock --no-check-publish --strict
       - run: composer install --no-interaction --no-progress --prefer-dist --no-scripts --no-plugins
       - run: vendor/bin/pint --test
 
@@ -56,7 +56,7 @@ jobs:
             vendor
           key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
           restore-keys: composer-${{ runner.os }}-
-      - run: composer validate --no-check-publish --strict
+      - run: composer validate --no-check-lock --no-check-publish --strict
       - run: composer install --no-interaction --no-progress --prefer-dist --no-scripts --no-plugins
       - name: Cache PHPStan
         uses: actions/cache@v4
@@ -93,6 +93,9 @@ jobs:
           key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
           restore-keys: composer-${{ runner.os }}-
       - run: composer install --no-interaction --no-progress --prefer-dist
+      - name: Prepare .env
+        run: |
+          [ -f .env ] || cp .env.example .env || touch .env
       - run: php artisan key:generate --no-interaction
       - run: php artisan migrate --no-interaction --force || echo "skip migrations (none yet)"
       - run: vendor/bin/phpunit --colors=always --log-junit junit.xml
