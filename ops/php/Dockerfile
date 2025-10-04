@@ -4,7 +4,9 @@
 FROM php:8.3-fpm-alpine AS base
 
 RUN apk add --no-cache \
-      git zip unzip curl bash icu-dev oniguruma-dev libzip-dev libpng-dev postgresql-dev \
+      git zip unzip curl bash icu-dev oniguruma-dev libzip-dev \
+      libpng-dev freetype-dev libjpeg-turbo-dev postgresql-dev \
+  && docker-php-ext-configure gd --with-freetype --with-jpeg \
   && docker-php-ext-install pdo pdo_mysql pdo_pgsql intl zip gd \
   && docker-php-ext-enable opcache
 
@@ -18,6 +20,8 @@ WORKDIR /var/www/html
 # ========================
 FROM base AS dev
 RUN apk add --no-cache nodejs npm
+COPY ops/php/php.ini /usr/local/etc/php/conf.d/zz-php.ini
+COPY ops/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 # dev-образ оставляем «тонким»: код монтируем в docker-compose
 CMD ["php-fpm"]
 
@@ -39,6 +43,8 @@ RUN npm run build
 # ========================
 FROM base AS prod
 WORKDIR /var/www/html
+COPY ops/php/php.ini /usr/local/etc/php/conf.d/zz-php.ini
+COPY ops/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 # 1) кеш Composer слоёв (без скриптов)
 COPY composer.json composer.lock ./
@@ -57,7 +63,8 @@ COPY --from=assets /app/public/build ./public/build
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader \
  && mkdir -p storage/framework/{cache,session,views} storage/logs bootstrap/cache \
  && chown -R www-data:www-data storage bootstrap/cache \
- && chmod -R ug+rw storage bootstrap/cache
+ && chmod -R ug+rw storage bootstrap/cache \
+ && composer clear-cache
 
 # Примечание: artisan config:cache/route:cache лучше запускать на деплое,
 # когда уже есть реальные ENV (APP_KEY, DB_*, и т.д.)
