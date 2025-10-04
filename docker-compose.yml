@@ -1,0 +1,134 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./ops/php/Dockerfile
+      target: dev                  # PHP-FPM + Node для разработки
+    container_name: app
+    user: "${UID:-1000}:${GID:-1000}"
+    working_dir: /var/www/html
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      HOME: /var/www
+      COMPOSER_HOME: /var/www/.composer
+      NPM_CONFIG_CACHE: /var/www/.npm
+      XDG_CONFIG_HOME: /var/www/.config
+      XDG_CONFIG_CACHE: /var/www/.cache
+    volumes:
+      - ./:/var/www/html
+      - ./.cache/composer:/var/www/.composer
+      - ./.cache/npm:/var/www/.npm
+      - ./.cache/xdg-config:/var/www/.config
+      - ./.cache/xdg-cache:/var/www/.cache
+    depends_on:
+        db:
+          condition: service_healthy
+        redis:
+          condition: service_healthy
+    command: >
+      sh -c "ops/scripts/wait-for.sh db 5432 &&
+             ops/scripts/wait-for.sh redis 6379 &&
+             php-fpm"
+
+  web:
+    image: nginx:1.27-alpine
+    container_name: web
+    ports:
+      - "8888:80"
+    volumes:
+      - ./:/var/www/html
+      - ./ops/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      app:
+        condition: service_started
+
+  db:
+    image: postgres:16-alpine
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -h localhost -U app -d runtracker" ]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    container_name: db
+    environment:
+      POSTGRES_DB: runtracker
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    container_name: redis
+
+  queue:
+    build:
+      context: .
+      dockerfile: ./ops/php/Dockerfile
+      target: dev
+    container_name: queue
+    user: "${UID:-1000}:${GID:-1000}"
+    working_dir: /var/www/html
+    environment:
+      APP_ENV: local
+      HOME: /var/www
+      COMPOSER_HOME: /var/www/.composer
+      NPM_CONFIG_CACHE: /var/www/.npm
+    volumes:
+      - ./:/var/www/html
+      - ./.cache/composer:/var/www/.composer
+      - ./.cache/npm:/var/www/.npm
+    depends_on:
+      app:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "ops/scripts/wait-for.sh db 5432 &&
+             ops/scripts/wait-for.sh redis 6379 &&
+             php artisan queue:work --queue=default --sleep=3 --tries=3"
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: ./ops/php/Dockerfile
+      target: dev
+    container_name: scheduler
+    user: "${UID:-1000}:${GID:-1000}"
+    working_dir: /var/www/html
+    environment:
+      APP_ENV: local
+      HOME: /var/www
+      COMPOSER_HOME: /var/www/.composer
+      NPM_CONFIG_CACHE: /var/www/.npm
+    volumes:
+      - ./:/var/www/html
+      - ./.cache/composer:/var/www/.composer
+      - ./.cache/npm:/var/www/.npm
+    depends_on:
+      app:
+        condition: service_started
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "ops/scripts/wait-for.sh db 5432 &&
+             ops/scripts/wait-for.sh redis 6379 &&
+             ops/scripts/schedule-loop.sh"
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "8025:8025"
+
+volumes:
+  dbdata:
+
