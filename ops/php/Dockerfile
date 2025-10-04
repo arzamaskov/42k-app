@@ -3,12 +3,20 @@
 # ========================
 FROM php:8.3-fpm-alpine AS base
 
-RUN apk add --no-cache \
+RUN set -eux; \
+    apk add --no-cache \
       git zip unzip curl bash icu-dev oniguruma-dev libzip-dev \
       libpng-dev freetype-dev libjpeg-turbo-dev postgresql-dev \
-  && docker-php-ext-configure gd --with-freetype --with-jpeg \
-  && docker-php-ext-install pdo pdo_mysql pdo_pgsql intl zip gd \
-  && docker-php-ext-enable opcache
+    && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
+    # phpredis
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    # GD + прочие расширения
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql intl zip gd \
+    && docker-php-ext-enable opcache \
+    # подчистим toolchain
+    && apk del .build-deps
 
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
