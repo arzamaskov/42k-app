@@ -24,3 +24,5 @@ Homestead.yaml
 Thumbs.db
 .phpstan/cache/
 junit.xml
+.php-cs-fixer.cache
+.cache/
