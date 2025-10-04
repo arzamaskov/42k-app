@@ -13,9 +13,3 @@ parameters:
   excludePaths:
     - bootstrap/cache/*
     - storage/*
-  checkGenericClassInNonGenericObjectType: false
-
-  # Для удобства в Laravel
-  scanFiles:
-    - vendor/nunomaduro/larastan/larastan-bootstrap.php
-
