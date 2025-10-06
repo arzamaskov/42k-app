@@ -40,7 +40,10 @@ stan-baseline: ## Сгенерировать baseline для PHPStan
 	$(DC) exec -T $(APP) php -d memory_limit=-1 vendor/bin/phpstan analyse --generate-baseline=phpstan-baseline.neon
 
 # ---------- Тесты ----------
-test: ensure-env ## Запустить тесты
+test:
+	$(DC) exec $(APP) php artisan test
+
+phpunit: ensure-env ## Запустить тесты
 	$(DC) exec -T $(APP) php artisan key:generate --no-interaction || true
 	$(DC) exec -T $(APP) php artisan migrate --graceful --no-interaction || true
 	$(DC) exec -T $(APP) vendor/bin/phpunit --colors=always
@@ -50,4 +53,4 @@ test-coverage: ensure-env
 	$(DC) exec -T $(APP) php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-text --colors=always
 
 # ---------- Комбо для локальной проверки перед пушем ----------
-ci: deps lint stan test ## Локальный аналог CI-гонки
+ci: deps lint stan phpunit ## Локальный аналог CI-гонки
