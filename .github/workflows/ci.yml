@@ -80,7 +80,7 @@ jobs:
       - name: Install psql client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
       - name: Prepare DB schema
-        run: psql postgresql://postgres:postgres@127.0.0.1:5432/app_test -c 'CREATE SCHEMA IF NOT EXISTS users;'
+        run: psql postgresql://app:secret@127.0.0.1:5432/runtracker_test -c 'CREATE SCHEMA IF NOT EXISTS users;'
       - name: Cache Composer
         uses: actions/cache@v4
         with:
