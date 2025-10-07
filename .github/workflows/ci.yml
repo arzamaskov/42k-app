@@ -95,6 +95,10 @@ jobs:
           [ -f .env ] || cp .env.example .env
           php artisan key:generate
       - name: Clear caches
-        run: php artisan optimize:clear
+        run: |
+          php artisan config:clear
+          php artisan route:clear
+          php artisan view:clear
+          php artisan event:clear
       - name: PHPUnit
         run: php artisan test --colors=always
