@@ -53,4 +53,4 @@ test-coverage: ensure-env
 	$(DC) exec -T $(APP) php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-text --colors=always
 
 # ---------- Комбо для локальной проверки перед пушем ----------
-ci: deps lint stan phpunit ## Локальный аналог CI-гонки
+ci: deps lint stan test ## Локальный аналог CI-гонки
