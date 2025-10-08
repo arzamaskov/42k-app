@@ -22,6 +22,25 @@ jobs:
   tests:
     name: PHP tests
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: runtracker_test
+        ports: [ 5432:5432 ]
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s --health-timeout=5s --health-retries=5
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: runtracker_test
+      DB_USERNAME: app
+      DB_PASSWORD: secret
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -29,6 +48,10 @@ jobs:
         with:
           php-version: "8.3"
           extensions: mbstring, intl, redis, pdo_pgsql
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Prepare DB schema
+        run: psql postgresql://app:secret@127.0.0.1:5432/runtracker_test -c 'CREATE SCHEMA IF NOT EXISTS users;'
       - name: Cache Composer
         uses: actions/cache@v4
         with:
@@ -42,8 +65,14 @@ jobs:
         run: |
           [ -f .env ] || cp .env.example .env
           php artisan key:generate
+      - name: Clear caches
+        run: |
+          php artisan config:clear
+          php artisan route:clear
+          php artisan view:clear
+          php artisan event:clear
       - name: PHPUnit
-        run: vendor/bin/phpunit --colors=always
+        run: php artisan test --colors=always
 
   build:
     name: Build & Push images (app & web)
