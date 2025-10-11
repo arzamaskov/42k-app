@@ -25,13 +25,13 @@ class AuthTest extends TestCase
         $response = $this->postJson('/api/register', $userData);
 
         $response->assertStatus(201)->assertJsonStructure([
-            'user' => ['id', 'name', 'email',],
-            'token'
+            'user' => ['id', 'name', 'email'],
+            'token',
         ]);
 
         self::assertDatabaseHas('users.user', [
             'name' => $userData['name'],
-            'email' => $userData['email']
+            'email' => $userData['email'],
         ]);
 
         $user = User::query()->where('email', $userData['email'])->first();

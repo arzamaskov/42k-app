@@ -16,12 +16,12 @@ class LoginTest extends TestCase
     public function test_user_can_login_with_valid_credentials()
     {
         $user = User::factory()->create([
-            'password' => Hash::make('password123')
+            'password' => Hash::make('password123'),
         ]);
 
         $loginData = [
             'email' => $user->email,
-            'password' => 'password123'
+            'password' => 'password123',
         ];
 
         $response = $this->postJson('/api/login', $loginData);
@@ -29,7 +29,7 @@ class LoginTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonStructure([
             'user' => ['id', 'name', 'email'],
-            'token'
+            'token',
         ]);
 
         self::assertAuthenticated();
@@ -38,7 +38,7 @@ class LoginTest extends TestCase
     public function test_user_cannot_login_with_invalid_credentials()
     {
         $user = User::factory()->create([
-            'password' => Hash::make('password123')
+            'password' => Hash::make('password123'),
         ]);
 
         $loginData = [
@@ -50,7 +50,7 @@ class LoginTest extends TestCase
 
         $response->assertStatus(401);
         $response->assertJson([
-            'message' => 'Invalid email or password'
+            'message' => 'Invalid email or password',
         ]);
     }
 
@@ -65,7 +65,7 @@ class LoginTest extends TestCase
 
         $response->assertStatus(401);
         $response->assertJson([
-            'message' => 'Invalid email or password'
+            'message' => 'Invalid email or password',
         ]);
     }
 

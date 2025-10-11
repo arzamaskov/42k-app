@@ -16,7 +16,7 @@ class UserTest extends TestCase
         $token = $user->createToken('auth-token')->plainTextToken;
 
         $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $token,
+            'Authorization' => 'Bearer '.$token,
         ])->getJson('/api/user');
 
         $response->assertStatus(200);
@@ -26,7 +26,7 @@ class UserTest extends TestCase
             'email',
             'email_verified_at',
             'created_at',
-            'updated_at'
+            'updated_at',
         ]);
 
         // Проверяем, что возвращаются данные текущего пользователя

@@ -14,7 +14,9 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
     protected Request $request;
-    public function __construct(Request $request){
+
+    public function __construct(Request $request)
+    {
         $this->request = $request;
     }
 
@@ -48,7 +50,7 @@ class AuthController extends Controller
         ]);
         if (! Auth::attempt($validated)) {
             return response()->json([
-                'message' => 'Invalid email or password'
+                'message' => 'Invalid email or password',
             ], 401);
         }
 
