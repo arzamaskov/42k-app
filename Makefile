@@ -2,10 +2,13 @@
 DC ?= docker compose
 APP ?= app
 
-.PHONY: up down shell logs migrate deps ensure-env lint lint-fix stan stan-baseline test test-coverage ci
+.PHONY: up stop down shell logs migrate deps ensure-env lint lint-fix stan stan-baseline test test-coverage ci
 
 up:
 	$(DC) up -d --build
+
+stop:
+	$(DC) stop
 
 down:
 	$(DC) down
