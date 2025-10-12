@@ -16,7 +16,7 @@ abstract class BaseResponse
             'data' => $data], $status);
     }
 
-    protected static function error(string $message, int $status = Response::HTTP_BAD_REQUEST, array $errors = []): JsonResponse
+    public static function error(string $message, int $status = Response::HTTP_BAD_REQUEST, array $errors = []): JsonResponse
     {
         return response()->json([
             'success' => false,
