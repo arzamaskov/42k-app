@@ -25,8 +25,11 @@ class AuthTest extends TestCase
         $response = $this->postJson('/api/register', $userData);
 
         $response->assertStatus(201)->assertJsonStructure([
-            'user' => ['id', 'name', 'email'],
-            'token',
+            'success',
+            'data' => [
+                'user' => ['id', 'name', 'email'],
+                'token',
+            ],
         ]);
 
         self::assertDatabaseHas('users.user', [
@@ -158,7 +161,7 @@ class AuthTest extends TestCase
         $response = $this->postJson('/api/register', $userData);
 
         $response->assertStatus(201);
-        $response->assertJsonMissing(['password']);
+        $response->assertJsonMissing(['data' => ['user' => ['password']]]);
         $response->assertJsonMissing(['password_confirmation']);
     }
 }

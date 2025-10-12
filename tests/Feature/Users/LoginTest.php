@@ -28,8 +28,11 @@ class LoginTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
-            'user' => ['id', 'name', 'email'],
-            'token',
+            'success',
+            'data' => [
+                'user' => ['id', 'name', 'email'],
+                'token',
+            ],
         ]);
 
         self::assertAuthenticated();
@@ -50,7 +53,9 @@ class LoginTest extends TestCase
 
         $response->assertStatus(401);
         $response->assertJson([
-            'message' => 'Invalid email or password',
+            'success' => false,
+            'message' => 'Неверный email или пароль',
+            'errors' => [],
         ]);
     }
 
@@ -65,7 +70,9 @@ class LoginTest extends TestCase
 
         $response->assertStatus(401);
         $response->assertJson([
-            'message' => 'Invalid email or password',
+            'success' => false,
+            'message' => 'Неверный email или пароль',
+            'errors' => [],
         ]);
     }
 

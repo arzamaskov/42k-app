@@ -21,19 +21,27 @@ class UserTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
-            'id',
-            'name',
-            'email',
-            'email_verified_at',
-            'created_at',
-            'updated_at',
+            'success',
+            'data' => [
+                'user' => [
+                    'id',
+                    'name',
+                    'email',
+                    'created_at',
+                ],
+            ],
         ]);
 
         // Проверяем, что возвращаются данные текущего пользователя
         $response->assertJson([
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
+            'success' => true,
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ],
+            ],
         ]);
 
         // Проверяем, что пароль не возвращается
