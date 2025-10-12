@@ -8,6 +8,7 @@ use App\Shared\UI\Http\Controller;
 use App\Users\Domain\Repositories\UserRepositoryInterface;
 use App\Users\UI\Http\Requests\LoginRequest;
 use App\Users\UI\Http\Requests\RegisterRequest;
+use App\Users\UI\Http\Responses\AuthResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,41 +32,33 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json([
-            'user' => $user,
-            'token' => $token,
-        ], 201);
+        return AuthResponse::registered($user, $token);
     }
 
     public function login(LoginRequest $loginRequest): JsonResponse
     {
         $validated = $loginRequest->validated();
         if (! Auth::attempt($validated)) {
-            return response()->json([
-                'message' => 'Invalid email or password',
-            ], 401);
+            return AuthResponse::invalidCredentials();
         }
 
         $user = Auth::user();
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json([
-            'user' => $user,
-            'token' => $token,
-        ], 200);
+        return AuthResponse::loggedIn($user, $token);
     }
 
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json(['message' => 'Successfully logged out'], 200);
+        return AuthResponse::loggedOut();
     }
 
     public function user(): JsonResponse
     {
         $user = request()->user();
 
-        return response()->json($user, 200);
+        return AuthResponse::userProfile($user);
     }
 }
