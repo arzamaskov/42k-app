@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Users\UI\Http;
 
 use App\Shared\UI\Http\Controller;
-use App\Users\Infrastructure\Database\Eloquent\Models\User;
+use App\Users\Domain\Repositories\UserRepositoryInterface;
+use App\Users\UI\Http\Requests\LoginRequest;
+use App\Users\UI\Http\Requests\RegisterRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,22 +15,15 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    protected Request $request;
+    public function __construct(
+        private readonly UserRepositoryInterface $userRepository
+    ) {}
 
-    public function __construct(Request $request)
+    public function register(RegisterRequest $registerRequest): JsonResponse
     {
-        $this->request = $request;
-    }
+        $validated = $registerRequest->validated();
 
-    public function register(): JsonResponse
-    {
-        $validated = $this->request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:App\Users\Infrastructure\Database\Eloquent\Models\User',
-            'password' => 'required|string|confirmed|min:8',
-        ]);
-
-        $user = User::create([
+        $user = $this->userRepository->create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
@@ -42,12 +37,9 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function login(): JsonResponse
+    public function login(LoginRequest $loginRequest): JsonResponse
     {
-        $validated = $this->request->validate([
-            'email' => 'required|string|email|max:255',
-            'password' => 'required|string',
-        ]);
+        $validated = $loginRequest->validated();
         if (! Auth::attempt($validated)) {
             return response()->json([
                 'message' => 'Invalid email or password',
@@ -63,9 +55,9 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function logout(): JsonResponse
+    public function logout(Request $request): JsonResponse
     {
-        request()->user()->currentAccessToken()->delete();
+        $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Successfully logged out'], 200);
     }
