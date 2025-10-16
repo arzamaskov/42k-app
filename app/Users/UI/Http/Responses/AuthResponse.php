@@ -5,20 +5,21 @@ declare(strict_types=1);
 namespace App\Users\UI\Http\Responses;
 
 use App\Shared\UI\Http\Responses\BaseResponse;
+use App\Users\Application\DTO\UserDTO;
 use App\Users\Infrastructure\Database\Eloquent\Models\User;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthResponse extends BaseResponse
 {
-    public static function registered(User $user, string $token): JsonResponse
+    public static function registered(UserDTO $user, string $token): JsonResponse
     {
         return self::success([
             'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'created_at' => $user->created_at,
+                'id' => $user->getId(),
+                'name' => $user->getName(),
+                'email' => $user->getEmail(),
+                'created_at' => $user->getCreatedAt(),
             ],
             'token' => $token,
         ], Response::HTTP_CREATED);
