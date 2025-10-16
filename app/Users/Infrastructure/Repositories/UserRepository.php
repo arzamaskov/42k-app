@@ -4,25 +4,34 @@ declare(strict_types=1);
 
 namespace App\Users\Infrastructure\Repositories;
 
+use App\Users\Application\Mappers\UserMapper;
+use App\Users\Domain\Entities\User;
 use App\Users\Domain\Repositories\UserRepositoryInterface;
-use App\Users\Infrastructure\Database\Eloquent\Models\User;
+use App\Users\Domain\ValueObjects\Email;
+use App\Users\Domain\ValueObjects\UserId;
+use App\Users\Infrastructure\Database\Eloquent\Models\User as EloquentUser;
 
-class UserRepository implements UserRepositoryInterface
+readonly class UserRepository implements UserRepositoryInterface
 {
-    public function __construct(private readonly User $user) {}
-
-    public function create(array $data): User
+    public function findByEmail(Email $email): ?User
     {
-        return $this->user->newQuery()->create($data);
+        $eloquentUser = EloquentUser::query()->where('email', $email->toString())->first();
+
+        return $eloquentUser ? UserMapper::toDomain($eloquentUser) : null;
     }
 
-    public function findByEmail(string $email): ?User
+    public function findById(UserId $id): ?User
     {
-        return User::query()->where('email', $email)->first();
+        $eloquentUser = EloquentUser::query()->find($id->toString());
+
+        return $eloquentUser ? UserMapper::toDomain($eloquentUser) : null;
     }
 
-    public function find(string $id): ?User
+    public function save(User $user): User
     {
-        return User::query()->find($id);
+        $eloquentUser = UserMapper::toEloquent($user);
+        $eloquentUser->save();
+
+        return UserMapper::toDomain($eloquentUser);
     }
 }

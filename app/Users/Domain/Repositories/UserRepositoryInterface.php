@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace App\Users\Domain\Repositories;
 
-use App\Users\Infrastructure\Database\Eloquent\Models\User;
+use App\Users\Domain\Entities\User;
+use App\Users\Domain\ValueObjects\Email;
+use App\Users\Domain\ValueObjects\UserId;
 
 interface UserRepositoryInterface
 {
-    public function create(array $data): User;
+    public function save(User $user): User;
 
-    public function findByEmail(string $email): ?User;
+    public function findByEmail(Email $email): ?User;
 
-    public function find(string $id): ?User;
+    public function findById(UserId $id): ?User;
 }
