@@ -10,7 +10,7 @@ class ValidationMessagesTest extends TestCase
 {
     public function test_register_validation_returns_russian_messages()
     {
-        $response = $this->postJson('/api/register', [
+        $response = $this->postJson('/api/регистрация', [
             'name' => '', // Пустое имя
             'email' => 'invalid-email', // Неверный email
             'password' => '123', // Короткий пароль
@@ -29,7 +29,7 @@ class ValidationMessagesTest extends TestCase
 
     public function test_login_validation_returns_russian_messages()
     {
-        $response = $this->postJson('/api/login', [
+        $response = $this->postJson('/api/вход', [
             'email' => 'invalid-email', // Неверный email
             'password' => '', // Пустой пароль
         ]);

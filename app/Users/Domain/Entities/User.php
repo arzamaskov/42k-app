@@ -6,6 +6,7 @@ namespace App\Users\Domain\Entities;
 
 use App\Users\Domain\ValueObjects\Email;
 use App\Users\Domain\ValueObjects\PasswordHash;
+use App\Users\Domain\ValueObjects\Role;
 use App\Users\Domain\ValueObjects\UserId;
 use Carbon\Carbon;
 
@@ -16,6 +17,7 @@ final readonly class User
         private string $name,
         private Email $email,
         private PasswordHash $passwordHash,
+        private Role $role,
         private Carbon $createdAt,
     ) {}
 
@@ -24,12 +26,14 @@ final readonly class User
         string $name,
         Email $email,
         PasswordHash $passwordHash,
+        ?Role $role = null,
     ): self {
         return new self(
             id: $id,
             name: $name,
             email: $email,
             passwordHash: $passwordHash,
+            role: $role ?? Role::user(),
             createdAt: Carbon::now(),
         );
     }
@@ -39,9 +43,10 @@ final readonly class User
         string $name,
         Email $email,
         PasswordHash $passwordHash,
+        Role $role,
         Carbon $createdAt,
     ): self {
-        return new self($id, $name, $email, $passwordHash, $createdAt);
+        return new self($id, $name, $email, $passwordHash, $role, $createdAt);
     }
 
     public function getId(): UserId
@@ -64,6 +69,11 @@ final readonly class User
         return $this->passwordHash;
     }
 
+    public function getRole(): Role
+    {
+        return $this->role;
+    }
+
     public function getCreatedAt(): Carbon
     {
         return $this->createdAt;
@@ -76,6 +86,7 @@ final readonly class User
             name: $this->name,
             email: $this->email,
             passwordHash: $newPasswordHash,
+            role: $this->role,
             createdAt: $this->createdAt,
         );
     }
@@ -87,7 +98,40 @@ final readonly class User
             name: $name,
             email: $this->email,
             passwordHash: $this->passwordHash,
+            role: $this->role,
             createdAt: $this->createdAt,
         );
+    }
+
+    public function changeRole(Role $newRole): self
+    {
+        return new self(
+            id: $this->id,
+            name: $this->name,
+            email: $this->email,
+            passwordHash: $this->passwordHash,
+            role: $newRole,
+            createdAt: $this->createdAt,
+        );
+    }
+
+    public function isUser(): bool
+    {
+        return $this->role->isUser();
+    }
+
+    public function isCoach(): bool
+    {
+        return $this->role->isCoach();
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role->isAdmin();
+    }
+
+    public function isCoachOrAdmin(): bool
+    {
+        return $this->role->isAdminOrCoach();
     }
 }
