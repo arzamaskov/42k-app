@@ -10,7 +10,7 @@ class MiddlewareTest extends TestCase
 {
     public function test_custom_auth_middleware_returns_proper_error_response()
     {
-        $response = $this->getJson('/api/user');
+        $response = $this->getJson('/api/профиль');
 
         $response->assertStatus(401);
         $response->assertJson([

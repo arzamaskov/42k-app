@@ -24,7 +24,7 @@ class LoginTest extends TestCase
             'password' => 'password123',
         ];
 
-        $response = $this->postJson('/api/login', $loginData);
+        $response = $this->postJson('/api/вход', $loginData);
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -49,7 +49,7 @@ class LoginTest extends TestCase
             'password' => 'wrong_password', // Неверный пароль
         ];
 
-        $response = $this->postJson('/api/login', $loginData);
+        $response = $this->postJson('/api/вход', $loginData);
 
         $response->assertStatus(401);
         $response->assertJson([
@@ -66,7 +66,7 @@ class LoginTest extends TestCase
             'password' => 'password123',
         ];
 
-        $response = $this->postJson('/api/login', $loginData);
+        $response = $this->postJson('/api/вход', $loginData);
 
         $response->assertStatus(401);
         $response->assertJson([
@@ -83,7 +83,7 @@ class LoginTest extends TestCase
             'password' => 'password123',
         ];
 
-        $response = $this->postJson('/api/login', $loginData);
+        $response = $this->postJson('/api/вход', $loginData);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['email']);
@@ -96,7 +96,7 @@ class LoginTest extends TestCase
             // Нет password
         ];
 
-        $response = $this->postJson('/api/login', $loginData);
+        $response = $this->postJson('/api/вход', $loginData);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['password']);

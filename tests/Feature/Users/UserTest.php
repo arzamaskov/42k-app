@@ -17,7 +17,7 @@ class UserTest extends TestCase
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer '.$token,
-        ])->getJson('/api/user');
+        ])->getJson('/api/профиль');
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -50,7 +50,7 @@ class UserTest extends TestCase
 
     public function test_user_cannot_get_profile_without_token()
     {
-        $response = $this->getJson('/api/user');
+        $response = $this->getJson('/api/профиль');
 
         $response->assertStatus(401);
     }
@@ -59,7 +59,7 @@ class UserTest extends TestCase
     {
         $response = $this->withHeaders([
             'Authorization' => 'Bearer invalid-token',
-        ])->getJson('/api/user');
+        ])->getJson('/api/профиль');
 
         $response->assertStatus(401);
     }

@@ -10,6 +10,7 @@ use App\Users\Domain\Entities\User;
 use App\Users\Domain\Repositories\UserRepositoryInterface;
 use App\Users\Domain\ValueObjects\Email;
 use App\Users\Domain\ValueObjects\PasswordHash;
+use App\Users\Domain\ValueObjects\Role;
 use App\Users\Domain\ValueObjects\UserId;
 use Illuminate\Support\Facades\Hash;
 
@@ -24,6 +25,7 @@ readonly class UserService
             name: $createUserDTO->getName(),
             email: Email::fromString($createUserDTO->getEmail()),
             passwordHash: PasswordHash::fromString(Hash::make($createUserDTO->getPassword())),
+            role: Role::user(), // По умолчанию создаем пользователя с ролью user
         );
 
         $savedUser = $this->userRepository->save($user);

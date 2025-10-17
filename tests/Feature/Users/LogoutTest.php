@@ -17,7 +17,7 @@ class LogoutTest extends TestCase
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer '.$token,
-        ])->postJson('/api/logout');
+        ])->postJson('/api/выход');
 
         $response->assertStatus(200);
         $response->assertJson([
@@ -28,7 +28,7 @@ class LogoutTest extends TestCase
 
     public function test_user_cannot_logout_without_token()
     {
-        $response = $this->postJson('/api/logout');
+        $response = $this->postJson('/api/выход');
 
         $response->assertStatus(401);
     }

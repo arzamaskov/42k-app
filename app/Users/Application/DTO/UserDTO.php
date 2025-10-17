@@ -14,6 +14,7 @@ final readonly class UserDTO
         private string $id,
         private string $name,
         private string $email,
+        private string $role,
         private Carbon $createdAt,
     ) {}
 
@@ -23,6 +24,7 @@ final readonly class UserDTO
             id: $user->id,
             name: $user->name,
             email: $user->email,
+            role: $user->role ?? 'user', // По умолчанию user, если поле отсутствует
             createdAt: $user->created_at
         );
     }
@@ -33,6 +35,7 @@ final readonly class UserDTO
             id: $user->getId()->toString(),
             name: $user->getName(),
             email: $user->getEmail()->toString(),
+            role: $user->getRole()->toString(),
             createdAt: $user->getCreatedAt(),
         );
     }
@@ -43,6 +46,7 @@ final readonly class UserDTO
             'id' => $this->getId(),
             'name' => $this->getName(),
             'email' => $this->getEmail(),
+            'role' => $this->getRole(),
             'created_at' => $this->getCreatedAt()->toDateTimeString(),
         ];
     }
@@ -60,6 +64,11 @@ final readonly class UserDTO
     public function getEmail(): string
     {
         return $this->email;
+    }
+
+    public function getRole(): string
+    {
+        return $this->role;
     }
 
     public function getCreatedAt(): Carbon

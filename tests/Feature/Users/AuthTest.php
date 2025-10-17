@@ -22,7 +22,7 @@ class AuthTest extends TestCase
             'password_confirmation' => 'password',
         ];
 
-        $response = $this->postJson('/api/register', $userData);
+        $response = $this->postJson('/api/регистрация', $userData);
 
         $response->assertStatus(201)->assertJsonStructure([
             'success',
@@ -50,7 +50,7 @@ class AuthTest extends TestCase
             'password_confirmation' => 'password123',
         ];
 
-        $response = $this->postJson('/api/register', $userData);
+        $response = $this->postJson('/api/регистрация', $userData);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['email']);
@@ -68,7 +68,7 @@ class AuthTest extends TestCase
             'password_confirmation' => 'password123',
         ];
 
-        $response = $this->postJson('/api/register', $userData);
+        $response = $this->postJson('/api/регистрация', $userData);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['email']);
@@ -83,7 +83,7 @@ class AuthTest extends TestCase
             'password_confirmation' => '123',
         ];
 
-        $response = $this->postJson('/api/register', $userData);
+        $response = $this->postJson('/api/регистрация', $userData);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['password']);
@@ -98,7 +98,7 @@ class AuthTest extends TestCase
             // Нет password_confirmation
         ];
 
-        $response = $this->postJson('/api/register', $userData);
+        $response = $this->postJson('/api/регистрация', $userData);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['password']);
@@ -113,7 +113,7 @@ class AuthTest extends TestCase
             'password_confirmation' => 'different_password',
         ];
 
-        $response = $this->postJson('/api/register', $userData);
+        $response = $this->postJson('/api/регистрация', $userData);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['password']);
@@ -128,7 +128,7 @@ class AuthTest extends TestCase
             'password_confirmation' => 'password123',
         ];
 
-        $response = $this->postJson('/api/register', $userData);
+        $response = $this->postJson('/api/регистрация', $userData);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['name']);
@@ -143,7 +143,7 @@ class AuthTest extends TestCase
             'password_confirmation' => 'password123',
         ];
 
-        $response = $this->postJson('/api/register', $userData);
+        $response = $this->postJson('/api/регистрация', $userData);
 
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['name']);
@@ -158,7 +158,7 @@ class AuthTest extends TestCase
             'password_confirmation' => 'password123',
         ];
 
-        $response = $this->postJson('/api/register', $userData);
+        $response = $this->postJson('/api/регистрация', $userData);
 
         $response->assertStatus(201);
         $response->assertJsonMissing(['data' => ['user' => ['password']]]);
